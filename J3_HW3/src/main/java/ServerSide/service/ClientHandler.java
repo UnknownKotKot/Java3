@@ -7,6 +7,8 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
 import java.util.Arrays;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class ClientHandler {
 
@@ -17,6 +19,7 @@ public class ClientHandler {
     private String name;
 
     public ClientHandler(MyServer myServer, Socket socket) {
+        ExecutorService service = Executors.newSingleThreadExecutor();
         try {
             this.myServer = myServer;
             this.socket = socket;
@@ -24,7 +27,7 @@ public class ClientHandler {
             this.dos = new DataOutputStream(socket.getOutputStream());
             this.name ="";
 
-            new Thread(()->{
+            service.execute(()->{
                 try {
                     authentication();
                     readMessage();
@@ -33,9 +36,11 @@ public class ClientHandler {
                 }finally {
                     closeConnection();
                 }
-            }).start();
+            });
         }catch (IOException e) {
             System.out.println(" Server error, go to admin");
+        }finally {
+            service.shutdown();
         }
     }
 
